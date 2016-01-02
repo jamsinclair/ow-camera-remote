@@ -15,9 +15,7 @@ static GColor TEXT_COLOR;
 static int s_timer_value = 0;
 static char* s_current_text_layer;
 
-/******************
- * Helper Methods
- ******************/
+/********************************* Helper Methods ************************************/
 
 static char* intToStrPointer(int i) {
     size_t needed = snprintf(NULL, 0, "%d", i);
@@ -36,9 +34,7 @@ static int getCenterOffset(int parentObj, int innerObj) {
   return (parentObj - innerObj) / 2;
 }
 
-/*****************************
- * Camera Background Graphic
- *****************************/
+/********************************* Camera Graphic ************************************/
 
 // Returns the center offset for camera graphic which is also the top section height of graphic
 static int getCameraGraphicCenterOffset(GRect bounds) {
@@ -83,9 +79,7 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
   draw_camera_background(ctx, bounds);
 }
 
-/********************
- * Layer Setup
- ********************/
+/********************************* Layers ************************************/
 
 static void init_start_layer(GRect bounds) {
   const int text_height = 70;
@@ -138,9 +132,7 @@ static void ensure_main_text_layer_showing() {
   }
 }
 
-/********************
- * CLICK LOGIC
- ********************/
+/********************************* Buttons ************************************/
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   ensure_main_text_layer_showing();
@@ -171,9 +163,7 @@ static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 150, down_click_handler);
 }
 
-/********************
- * Window Setup
- ********************/
+/********************************* Main Window ************************************/
 
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
@@ -200,10 +190,6 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_main_layer);
   layer_destroy(s_canvas_layer);
 }
-
-/********************
- * App Methods
- ********************/
 
 static void init(void) {
   BG_COLOR = COLOR_FALLBACK(GColorBlueMoon, GColorBlack);
