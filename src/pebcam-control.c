@@ -40,6 +40,12 @@ static int getCenterOffset(int parentObj, int innerObj) {
  * Camera Background Graphic
  *****************************/
 
+// Returns the center offset for camera graphic which is also the top section height of graphic
+static int getCameraGraphicCenterOffset(GRect bounds) {
+  // To account for the top section of camera graphic we need to offset centers with this value
+  return roundFloat(bounds.size.w * PBL_IF_RECT_ELSE(0.1, 0.08));
+}
+
 static void draw_camera_background(GContext *ctx, GRect bounds) {
   GRect main_layer_bounds = layer_get_bounds(text_layer_get_layer(s_main_layer));
 
@@ -47,26 +53,28 @@ static void draw_camera_background(GContext *ctx, GRect bounds) {
   // Camera graphic's height is 80% of its own width
   int camera_height = roundFloat(camera_width * 0.8);
   int camera_top_width = roundFloat(camera_width / 2);
-  int camera_top_height = roundFloat(camera_height * 0.15);
+  int camera_top_height = getCameraGraphicCenterOffset(bounds);
   // Ensure camera lens will cover the rect main text layer
   int camera_lens_radius = (main_layer_bounds.size.w + 16) / 2;
+
+  int camera_center_height = camera_height - camera_top_height;
 
   // Camera Body
   graphics_context_set_fill_color(ctx, TEXT_COLOR);
   graphics_fill_rect(ctx, GRect(getCenterOffset(bounds.size.w, camera_width),
-      getCenterOffset(bounds.size.h, camera_height), camera_width, camera_height),
+      getCenterOffset(bounds.size.h, camera_center_height), camera_width, camera_height),
     4,
     GCornersAll);
 
   // Camera Body Top
   graphics_fill_rect(ctx, GRect(getCenterOffset(bounds.size.w, camera_top_width),
-      getCenterOffset(bounds.size.h, camera_height) - camera_top_height, camera_top_width, camera_top_height),
+      getCenterOffset(bounds.size.h, camera_center_height) - camera_top_height, camera_top_width, camera_top_height),
     4,
     GCornerTopLeft | GCornerTopRight);
 
   // Camera Lens
   graphics_context_set_fill_color(ctx, BG_COLOR);
-  graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), camera_lens_radius);
+  graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, (bounds.size.h + camera_top_height) / 2), camera_lens_radius);
 }
 
 static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
@@ -82,7 +90,7 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
 static void init_start_layer(GRect bounds) {
   const int text_height = 70;
 
-  GEdgeInsets text_insets = PBL_IF_RECT_ELSE(GEdgeInsets(getCenterOffset(bounds.size.h, text_height), 0),
+  GEdgeInsets text_insets = PBL_IF_RECT_ELSE(GEdgeInsets(getCenterOffset(bounds.size.h, text_height), 4),
     GEdgeInsets(getCenterOffset(bounds.size.h, text_height), bounds.size.w / 6, 0, bounds.size.w / 6));
 
   s_start_layer = text_layer_create(grect_inset(bounds, text_insets));
@@ -96,11 +104,15 @@ static void init_start_layer(GRect bounds) {
 static void init_main_layer(GRect bounds) {
   int text_width = 46;
   int text_height = 42;
+  int camera_center_offset = getCameraGraphicCenterOffset(bounds);
 
-  GEdgeInsets text_insets = GEdgeInsets(getCenterOffset(bounds.size.h, text_height),
-    getCenterOffset(bounds.size.w, text_width));
+  // Center main text layer to the camera graphic center
+  s_main_layer = text_layer_create(GRect(getCenterOffset(bounds.size.w, text_width),
+    getCenterOffset(bounds.size.h + camera_center_offset, text_height),
+    text_width,
+    text_height)
+  );
 
-  s_main_layer = text_layer_create(grect_inset(bounds, text_insets));
   text_layer_set_overflow_mode(s_main_layer, GTextOverflowModeWordWrap);
   text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
   text_layer_set_text_alignment(s_main_layer, GTextAlignmentCenter);
