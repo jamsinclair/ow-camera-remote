@@ -109,17 +109,18 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
 /********************************* Layers ************************************/
 
 static void init_start_layer(GRect bounds) {
-  const int text_height = 70;
+  const int text_height = 95;
 
   GEdgeInsets text_insets = PBL_IF_RECT_ELSE(GEdgeInsets(getCenterOffset(bounds.size.h, text_height), 4),
     GEdgeInsets(getCenterOffset(bounds.size.h, text_height), bounds.size.w / 6, 0, bounds.size.w / 6));
 
   s_start_layer = text_layer_create(grect_inset(bounds, text_insets));
   text_layer_set_overflow_mode(s_start_layer, GTextOverflowModeWordWrap);
-  text_layer_set_text(s_start_layer, "Press up and down to set timer \n\nMiddle button to capture");
+  text_layer_set_text(s_start_layer, "Press up and down to set timer\n\nMiddle button to capture");
   text_layer_set_text_alignment(s_start_layer, GTextAlignmentCenter);
   text_layer_set_text_color(s_start_layer, TEXT_COLOR);
   text_layer_set_background_color(s_start_layer, BG_COLOR);
+  text_layer_set_font(s_start_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 }
 
 static void init_main_layer(GRect bounds) {
