@@ -1,5 +1,7 @@
 #include <pebble.h>
 
+#define KEY_CAPTURE 1
+
 static Window *s_main_window;
 
 // Layers
@@ -14,6 +16,31 @@ static GColor TEXT_COLOR;
 // Misc Globals
 static int s_timer_value = 0;
 static char* s_current_text_layer;
+
+/********************************* App Message ************************************/
+
+static void send_int_app_message(int key, int message) {
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+
+  dict_write_int(iter, key, &message, sizeof(int), true);
+
+  APP_LOG(APP_LOG_LEVEL_INFO, "Sending app message");
+  app_message_outbox_send();
+}
+
+static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+static void init_app_message_handlers() {
+  app_message_register_outbox_failed(outbox_failed_handler);
+  app_message_register_outbox_sent(outbox_sent_handler);
+}
 
 /********************************* Helper Methods ************************************/
 
@@ -145,6 +172,8 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   ensure_main_text_layer_showing();
+
+  send_int_app_message(KEY_CAPTURE, s_timer_value);
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -194,6 +223,9 @@ static void main_window_unload(Window *window) {
 static void init(void) {
   BG_COLOR = COLOR_FALLBACK(GColorBlueMoon, GColorBlack);
   TEXT_COLOR = GColorWhite;
+  init_app_message_handlers();
+
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
   s_main_window = window_create();
   window_set_window_handlers(s_main_window, (WindowHandlers) {
