@@ -2,6 +2,9 @@
 #include "comm/comm.h"
 #include "windows/alert_window.h"
 
+#define CAMERA_STATE_READY "camera_state_ready"
+#define CAMERA_STATE_IN_PROGRESS "camera_state_in_progress"
+
 static Window *s_main_window;
 
 // Layers
@@ -15,7 +18,9 @@ static GColor TEXT_COLOR;
 
 // Misc Globals
 static int s_timer_value = 0;
+static int s_timer_countdown_value = 0;
 static char* s_current_text_layer;
+static char* s_camera_state;
 
 /********************************* Helper Methods ************************************/
 char* intToStrPointer(int i) {
@@ -33,6 +38,20 @@ static int roundFloat(float num) {
 // within the parent object
 static int getCenterOffset(int parentObj, int innerObj) {
   return (parentObj - innerObj) / 2;
+}
+
+/********************************* States ************************************/
+
+static bool showing_start_layer() {
+  return (strcmp(s_current_text_layer, "start") == 0);
+}
+
+static bool is_camera_state_ready() {
+  return (strcmp(s_camera_state, CAMERA_STATE_READY) == 0);
+}
+
+static bool is_camera_state_in_progress() {
+  return (strcmp(s_camera_state, CAMERA_STATE_IN_PROGRESS) == 0);
 }
 
 /********************************* Camera Graphic ************************************/
@@ -125,7 +144,7 @@ static void init_canvas_layer(GRect bounds) {
 }
 
 static void ensure_main_text_layer_showing() {
-  if (strcmp(s_current_text_layer, "start") == 0) {
+  if (showing_start_layer()) {
     layer_set_hidden(text_layer_get_layer(s_start_layer), true);
     layer_set_hidden(text_layer_get_layer(s_main_layer), false);
     layer_set_hidden(s_canvas_layer, false);
@@ -165,20 +184,23 @@ static void start_layer_click_handler() {
   APP_LOG(APP_LOG_LEVEL_INFO, "Start Click Handler Activated");
 
   ensure_main_text_layer_showing();
+  s_camera_state = CAMERA_STATE_READY;
   send_int_app_message_with_callback(KEY_APP_STATUS_CHECK, s_timer_value, &message_timeout_handler);
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (strcmp(s_current_text_layer, "start") == 0) {
+  if (showing_start_layer()) {
     start_layer_click_handler();
     return;
   }
 
-  increment_camera_timer();
+  if (is_camera_state_ready()) {
+    increment_camera_timer();
+  }
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (strcmp(s_current_text_layer, "start") == 0) {
+  if (showing_start_layer()) {
     start_layer_click_handler();
     return;
   }
@@ -187,12 +209,14 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (strcmp(s_current_text_layer, "start") == 0) {
+  if (showing_start_layer()) {
     start_layer_click_handler();
     return;
   }
 
-  decrement_camera_timer();
+  if (is_camera_state_ready()) {
+    decrement_camera_timer();
+  }
 }
 
 static void click_config_provider(void *context) {
