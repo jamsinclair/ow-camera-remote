@@ -4,6 +4,7 @@
 
 #define CAMERA_STATE_READY "camera_state_ready"
 #define CAMERA_STATE_IN_PROGRESS "camera_state_in_progress"
+#define CAMERA_STATE_CANCELLED "camera_state_cancelled"
 
 static Window *s_main_window;
 
@@ -22,6 +23,7 @@ static int s_timer_value = 0;
 static int s_timer_countdown_value = 0;
 static char* s_current_text_layer;
 static char* s_camera_state;
+static AppTimer *countdown_timer;
 
 /********************************* Helper Methods ************************************/
 char* intToStrPointer(int i) {
@@ -39,20 +41,6 @@ static int roundFloat(float num) {
 // within the parent object
 static int getCenterOffset(int parentObj, int innerObj) {
   return (parentObj - innerObj) / 2;
-}
-
-/********************************* States ************************************/
-
-static bool showing_start_layer() {
-  return (strcmp(s_current_text_layer, "start") == 0);
-}
-
-static bool is_camera_state_ready() {
-  return (strcmp(s_camera_state, CAMERA_STATE_READY) == 0);
-}
-
-static bool is_camera_state_in_progress() {
-  return (strcmp(s_camera_state, CAMERA_STATE_IN_PROGRESS) == 0);
 }
 
 /********************************* Camera Graphic ************************************/
@@ -161,6 +149,24 @@ static void init_canvas_layer(GRect bounds) {
   layer_set_hidden(s_canvas_layer, true);
 }
 
+/********************************* States ************************************/
+
+static bool showing_start_layer() {
+  return (strcmp(s_current_text_layer, "start") == 0);
+}
+
+static bool is_camera_state_ready() {
+  return (strcmp(s_camera_state, CAMERA_STATE_READY) == 0);
+}
+
+static bool is_camera_state_in_progress() {
+  return (strcmp(s_camera_state, CAMERA_STATE_IN_PROGRESS) == 0);
+}
+
+static bool is_camera_state_cancelled() {
+  return (strcmp(s_camera_state, CAMERA_STATE_CANCELLED) == 0);
+}
+
 static void ensure_main_text_layer_showing() {
   if (showing_start_layer()) {
     layer_set_hidden(text_layer_get_layer(s_start_layer), true);
@@ -173,6 +179,21 @@ static void ensure_main_text_layer_showing() {
   }
 }
 
+static void set_camera_state_layer_ready() {
+  s_camera_state = CAMERA_STATE_READY;
+
+  text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
+  layer_set_hidden(text_layer_get_layer(s_countdown_layer), true);
+  layer_set_hidden(s_canvas_layer, false);
+}
+
+static void set_camera_state_layer_in_progress() {
+  s_camera_state = CAMERA_STATE_IN_PROGRESS;
+
+  layer_set_hidden(text_layer_get_layer(s_countdown_layer), false);
+  layer_set_hidden(s_canvas_layer, true);
+}
+
 /********************************* App Message Error Handlers ************************************/
 
 void message_timeout_handler(void *data) {
@@ -180,6 +201,58 @@ void message_timeout_handler(void *data) {
 
   // Failed to send message to app, display alert window
   alert_window_push();
+}
+
+/********************************* Countdown Camera ************************************/
+
+void camera_countdown_loop() {
+  if (s_timer_countdown_value <= 0) {
+    // Set a fallback timeout in case no message sent from Companion App on success of picture taken
+    countdown_timer = app_timer_register(5000, &set_camera_state_layer_ready, NULL);
+    return;
+  }
+
+  if (is_camera_state_cancelled()) {
+    text_layer_set_text(s_countdown_layer, "Timer cancelled.");
+    app_timer_register(2000, &set_camera_state_layer_ready, NULL);
+    return;
+  }
+
+  s_timer_countdown_value--;
+  text_layer_set_text(s_main_layer, intToStrPointer(s_timer_countdown_value));
+  countdown_timer = app_timer_register(1000, &camera_countdown_loop, NULL);
+}
+
+static void start_camera_countdown() {
+  // Increment by 1, as the loop immeddiately decrements
+  s_timer_countdown_value = s_timer_value + 1;
+  text_layer_set_text(s_countdown_layer, "Taking picture in...");
+  set_camera_state_layer_in_progress();
+  camera_countdown_loop();
+}
+
+void on_picture_taken() {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Picture Taken by Companion App");
+
+  if (!is_camera_state_in_progress()) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Picture Taken but no camera in progress");
+    return;
+  }
+
+  // Cancel the fallback timer if set
+  if (countdown_timer) {
+    app_timer_cancel(countdown_timer);
+  }
+
+  text_layer_set_text(s_countdown_layer, "Picture Taken");
+
+  if (s_timer_countdown_value > 0) {
+    text_layer_set_text(s_main_layer, "0");
+  }
+
+  vibes_double_pulse();
+
+  app_timer_register(2000, &set_camera_state_layer_ready, NULL);
 }
 
 /********************************* Buttons ************************************/
@@ -223,7 +296,13 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  send_int_app_message_with_callback(KEY_CAPTURE, s_timer_value, &message_timeout_handler);
+  if (is_camera_state_ready()) {
+    start_camera_countdown();
+    send_int_app_message_with_callback(KEY_CAPTURE, s_timer_value, &message_timeout_handler);
+  } else if (is_camera_state_in_progress()) {
+    s_camera_state = CAMERA_STATE_CANCELLED;
+    send_int_app_message_with_callback(KEY_CAPTURE, s_timer_value, &message_timeout_handler);
+  }
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -280,6 +359,7 @@ static void init(void) {
   TEXT_COLOR = GColorWhite;
 
   init_comm();
+  register_picture_taken_callback(&on_picture_taken);
 
   s_main_window = window_create();
   window_set_window_handlers(s_main_window, (WindowHandlers) {
