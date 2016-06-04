@@ -131,6 +131,8 @@ static void ensure_main_text_layer_showing() {
     layer_set_hidden(s_canvas_layer, false);
 
     s_current_text_layer = "main";
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "Main text layer is now showing");
   }
 }
 
@@ -145,7 +147,19 @@ void message_timeout_handler(void *data) {
 
 /********************************* Buttons ************************************/
 
+static void start_layer_click_handler() {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Start Click Handler Activated");
+
+  ensure_main_text_layer_showing();
+  send_int_app_message_with_callback(KEY_APP_STATUS_CHECK, s_timer_value, &message_timeout_handler);
+}
+
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (strcmp(s_current_text_layer, "start") == 0) {
+    start_layer_click_handler();
+    return;
+  }
+
   ensure_main_text_layer_showing();
 
   if (s_timer_value < 30) {
@@ -155,12 +169,22 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (strcmp(s_current_text_layer, "start") == 0) {
+    start_layer_click_handler();
+    return;
+  }
+
   ensure_main_text_layer_showing();
 
-  send_int_app_message(KEY_CAPTURE, s_timer_value);
+  send_int_app_message_with_callback(KEY_CAPTURE, s_timer_value, &message_timeout_handler);
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (strcmp(s_current_text_layer, "start") == 0) {
+    start_layer_click_handler();
+    return;
+  }
+
   ensure_main_text_layer_showing();
 
   if (s_timer_value > 0) {
