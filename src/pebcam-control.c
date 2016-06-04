@@ -140,7 +140,7 @@ static void init_main_layer(GRect bounds) {
 }
 
 static void init_countdown_layer(GRect bounds) {
-  const int text_height = 30;
+  const int text_height = 42;
 
   // Display the text above the countdown message above camera body graphic
   // @TODO find a nicer way of doing this, magic numbers, magic numbers
@@ -152,7 +152,7 @@ static void init_countdown_layer(GRect bounds) {
   text_layer_set_text_alignment(s_countdown_layer, GTextAlignmentCenter);
   text_layer_set_text_color(s_countdown_layer, TEXT_COLOR);
   text_layer_set_background_color(s_countdown_layer, BG_COLOR);
-  text_layer_set_font(s_countdown_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(s_countdown_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   layer_set_hidden(text_layer_get_layer(s_countdown_layer), true);
 }
 
