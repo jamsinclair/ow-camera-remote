@@ -10,6 +10,7 @@ static Window *s_main_window;
 // Layers
 static TextLayer *s_start_layer;
 static TextLayer *s_main_layer;
+static TextLayer *s_countdown_layer;
 static Layer *s_canvas_layer;
 
 // Color Globals
@@ -138,6 +139,23 @@ static void init_main_layer(GRect bounds) {
   layer_set_hidden(text_layer_get_layer(s_main_layer), true);
 }
 
+static void init_countdown_layer(GRect bounds) {
+  const int text_height = 30;
+
+  // Display the text above the countdown message above camera body graphic
+  // @TODO find a nicer way of doing this, magic numbers, magic numbers
+  int top_offset = roundFloat(PBL_IF_RECT_ELSE(bounds.size.w * (0.8 * 0.8), bounds.size.w * (0.8 * 0.65)) - text_height - getCameraGraphicCenterOffset(bounds));
+
+  s_countdown_layer = text_layer_create(GRect(0, top_offset, bounds.size.w, text_height));
+  text_layer_set_overflow_mode(s_countdown_layer, GTextOverflowModeWordWrap);
+  text_layer_set_text(s_countdown_layer, "Taking picture in...");
+  text_layer_set_text_alignment(s_countdown_layer, GTextAlignmentCenter);
+  text_layer_set_text_color(s_countdown_layer, TEXT_COLOR);
+  text_layer_set_background_color(s_countdown_layer, BG_COLOR);
+  text_layer_set_font(s_countdown_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  layer_set_hidden(text_layer_get_layer(s_countdown_layer), true);
+}
+
 static void init_canvas_layer(GRect bounds) {
   s_canvas_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
   layer_set_hidden(s_canvas_layer, true);
@@ -237,6 +255,7 @@ static void main_window_load(Window *window) {
 
   init_start_layer(bounds);
   init_main_layer(bounds);
+  init_countdown_layer(bounds);
   init_canvas_layer(bounds);
 
   s_current_text_layer = "start";
@@ -244,6 +263,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, s_canvas_layer);
   layer_add_child(window_layer, text_layer_get_layer(s_start_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_main_layer));
+  layer_add_child(window_layer, text_layer_get_layer(s_countdown_layer));
 
   layer_set_update_proc(s_canvas_layer, canvas_update_proc);
 }
@@ -251,6 +271,7 @@ static void main_window_load(Window *window) {
 static void main_window_unload(Window *window) {
   text_layer_destroy(s_start_layer);
   text_layer_destroy(s_main_layer);
+  text_layer_destroy(s_countdown_layer);
   layer_destroy(s_canvas_layer);
 }
 
