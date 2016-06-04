@@ -2,7 +2,10 @@
 #include "comm/comm.h"
 #include "windows/alert_window.h"
 
+typedef void(MsgReceivedCallback)(void);
+
 static AppTimer *response_wait_timer;
+static MsgReceivedCallback *picture_taken_callback;
 
 static char *translate_error(AppMessageResult result) {
   switch (result) {
@@ -46,11 +49,22 @@ void send_int_app_message_with_callback(int key, int message, void *timeout_hand
   }
 }
 
+void register_picture_taken_callback(void *callback) {
+  picture_taken_callback = callback;
+}
+
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   Tuple *t = dict_read_first(iterator);
 
+  APP_LOG(APP_LOG_LEVEL_INFO, "Received message from Companion App");
+
   while(t != NULL) {
     switch(t->key) {
+      case KEY_PICTURE_TAKEN:
+        if (picture_taken_callback) {
+          picture_taken_callback();
+        }
+        break;
       default:
         APP_LOG(APP_LOG_LEVEL_INFO, "Unknown key: %d", (int)t->key);
         break;

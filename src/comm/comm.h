@@ -5,5 +5,6 @@
 #define APP_MESSAGE_TIMEOUT 4000
 
 void send_int_app_message_with_callback();
+void register_picture_taken_callback();
 void init_comm();
 void deinit_comm();
