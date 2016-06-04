@@ -51,11 +51,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   while(t != NULL) {
     switch(t->key) {
-      case KEY_APP_STATUS_OKAY:
-        APP_LOG(APP_LOG_LEVEL_INFO, "Companion App responded, cancel timer");
-        app_timer_cancel(response_wait_timer);
-        // Handle Companion Open here....
-        break;
       default:
         APP_LOG(APP_LOG_LEVEL_INFO, "Unknown key: %d", (int)t->key);
         break;
