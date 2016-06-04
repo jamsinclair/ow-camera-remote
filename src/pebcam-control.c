@@ -147,6 +147,20 @@ void message_timeout_handler(void *data) {
 
 /********************************* Buttons ************************************/
 
+static void increment_camera_timer() {
+  if (s_timer_value < 30) {
+    s_timer_value++;
+    text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
+  }
+}
+
+static void decrement_camera_timer() {
+  if (s_timer_value > 0) {
+    s_timer_value--;
+    text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
+  }
+}
+
 static void start_layer_click_handler() {
   APP_LOG(APP_LOG_LEVEL_INFO, "Start Click Handler Activated");
 
@@ -160,12 +174,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  ensure_main_text_layer_showing();
-
-  if (s_timer_value < 30) {
-    s_timer_value++;
-    text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
-  }
+  increment_camera_timer();
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -173,8 +182,6 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     start_layer_click_handler();
     return;
   }
-
-  ensure_main_text_layer_showing();
 
   send_int_app_message_with_callback(KEY_CAPTURE, s_timer_value, &message_timeout_handler);
 }
@@ -185,12 +192,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  ensure_main_text_layer_showing();
-
-  if (s_timer_value > 0) {
-    s_timer_value--;
-    text_layer_set_text(s_main_layer, intToStrPointer(s_timer_value));
-  }
+  decrement_camera_timer();
 }
 
 static void click_config_provider(void *context) {
