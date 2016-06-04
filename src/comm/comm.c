@@ -66,6 +66,8 @@ static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult
 
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+
+  app_timer_cancel(response_wait_timer);
 }
 
 void init_comm() {
