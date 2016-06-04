@@ -4,6 +4,6 @@
 // Time to wait for a response from the companion app
 #define APP_MESSAGE_TIMEOUT 4000
 
-void send_int_app_message();
+void send_int_app_message_with_callback();
 void init_comm();
 void deinit_comm();

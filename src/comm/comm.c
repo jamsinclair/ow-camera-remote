@@ -23,13 +23,7 @@ static char *translate_error(AppMessageResult result) {
   }
 }
 
-void response_message_timeout_handler(void *data) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send timed out");
-
-  // Handle timeout, assume app not open?
-}
-
-void send_int_app_message(int key, int message) {
+void send_int_app_message_with_callback(int key, int message, void *timeout_handler) {
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
 
@@ -41,7 +35,7 @@ void send_int_app_message(int key, int message) {
   if (send_result_code == APP_MSG_OK) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Inital send okay");
 
-    response_wait_timer = app_timer_register(APP_MESSAGE_TIMEOUT, &response_message_timeout_handler, NULL);
+    response_wait_timer = app_timer_register(APP_MESSAGE_TIMEOUT, timeout_handler, NULL);
   } else {
     APP_LOG(APP_LOG_LEVEL_INFO, "Failed initial send with: %s\n", translate_error(send_result_code));
   }
