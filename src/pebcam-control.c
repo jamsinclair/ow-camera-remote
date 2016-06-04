@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "comm/comm.h"
+#include "windows/alert_window.h"
 
 static Window *s_main_window;
 
@@ -131,6 +132,15 @@ static void ensure_main_text_layer_showing() {
 
     s_current_text_layer = "main";
   }
+}
+
+/********************************* App Message Error Handlers ************************************/
+
+void message_timeout_handler(void *data) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send timed out");
+
+  // Failed to send message to app, display alert window
+  alert_window_push();
 }
 
 /********************************* Buttons ************************************/
