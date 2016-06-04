@@ -1,5 +1,6 @@
 #include <pebble.h>
-#include "comm.h"
+#include "comm/comm.h"
+#include "windows/alert_window.h"
 
 static AppTimer *response_wait_timer;
 
@@ -38,6 +39,10 @@ void send_int_app_message_with_callback(int key, int message, void *timeout_hand
     response_wait_timer = app_timer_register(APP_MESSAGE_TIMEOUT, timeout_handler, NULL);
   } else {
     APP_LOG(APP_LOG_LEVEL_INFO, "Failed initial send with: %s\n", translate_error(send_result_code));
+
+    AppTimerCallback handler = timeout_handler;
+    // Call timeout_handler
+    handler(NULL);
   }
 }
 
