@@ -235,7 +235,7 @@ void on_picture_taken() {
   APP_LOG(APP_LOG_LEVEL_INFO, "Picture Taken by Companion App");
 
   if (!is_camera_state_in_progress()) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Picture Taken but no camera in progress");
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Picture taken message but pebble camera state is not in progress");
     return;
   }
 
