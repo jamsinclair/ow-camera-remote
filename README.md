@@ -1,4 +1,4 @@
-# Pebcam Timer
+# Open Camera Remote
 
 A very simple camera timer remote app for Pebble Watches.
 
@@ -6,9 +6,9 @@ Set the countdown timer and pose for your great photo away from your phone.
 
 Relies on a companion app for photo taking from Android phone. The companion app is a modified clone of the great [Open Camera](http://opencamera.sourceforge.net) app.
 
-| Time Round  | Time & Time Steel | Classic & Steel
+| Time Round  | Time & Time Steel | Classic & Steel |
 | --- | --- | --- |
-| ![Pebcam Timer in action on Pebble Time Round](https://raw.githubusercontent.com/jamsinclair/pebcam-timer/master/submission-files/pebcam-timer-chalk.gif) |  ![Pebcam Timer in action on Pebble Time and Time Steel](https://raw.githubusercontent.com/jamsinclair/pebcam-timer/master/submission-files/pebcam-timer-basalt.gif) |  ![Pebcam Timer in action on Pebble Classic & Steel](https://raw.githubusercontent.com/jamsinclair/pebcam-timer/master/submission-files/pebcam-timer-aplite.gif)
+| ![Pebcam Timer in action on Pebble Time Round](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/chalk.gif) |  ![Pebcam Timer in action on Pebble Time and Time Steel](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/basalt.gif) |  ![Pebcam Timer in action on Pebble Classic & Steel](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/aplite.gif) |
 
 ## History
 
