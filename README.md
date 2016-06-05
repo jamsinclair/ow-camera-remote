@@ -1,4 +1,4 @@
-# Open Camera Remote
+# OW Camera Remote
 
 A very simple camera timer remote app for Pebble Watches.
 
@@ -8,7 +8,7 @@ Relies on a companion app for photo taking from Android phone. The companion app
 
 | Time Round  | Time & Time Steel | Classic & Steel |
 | --- | --- | --- |
-| ![Pebcam Timer in action on Pebble Time Round](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/chalk.gif) |  ![Pebcam Timer in action on Pebble Time and Time Steel](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/basalt.gif) |  ![Pebcam Timer in action on Pebble Classic & Steel](https://raw.githubusercontent.com/jamsinclair/open-camera-remote/master/submission-files/aplite.gif) |
+| ![Pebcam Timer in action on Pebble Time Round](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/chalk.gif) |  ![Pebcam Timer in action on Pebble Time and Time Steel](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/basalt.gif) |  ![Pebcam Timer in action on Pebble Classic & Steel](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/aplite.gif) |
 
 ## History
 
