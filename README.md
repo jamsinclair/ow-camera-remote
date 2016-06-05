@@ -4,7 +4,9 @@ A very simple camera timer remote app for Pebble Watches.
 
 Set the countdown timer and pose for your great photo away from your phone.
 
-Relies on a companion app for photo taking from Android phone. The companion app is a modified clone of the great [Open Camera](http://opencamera.sourceforge.net) app.
+Check it out on [Pebble Apps](https://apps.getpebble.com/applications/57542b7f70c28c587d000004)!
+
+Relies on a companion app, [OW Camera for Pebble](https://play.google.com/store/apps/details?id=com.github.jamsinclair.owcamera), for photo taking from Android phone. The companion app is a modified clone of the great [Open Camera](http://opencamera.sourceforge.net) app.
 
 | Time Round  | Time & Time Steel | Classic & Steel |
 | --- | --- | --- |
