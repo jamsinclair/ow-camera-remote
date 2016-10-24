@@ -23,6 +23,7 @@ static char *translate_error(AppMessageResult result) {
     case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
     case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
     case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
+    case APP_MSG_INVALID_STATE: return "APP_MSG_INVALID_STATE";
     default: return "UNKNOWN ERROR";
   }
 }
