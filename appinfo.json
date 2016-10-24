@@ -5,7 +5,7 @@
   "companyName": "jamsinclair",
   "versionLabel": "1.1",
   "sdkVersion": "3",
-  "targetPlatforms": ["aplite", "basalt", "chalk"],
+  "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery"],
   "watchapp": {
     "watchface": false
   },
