@@ -21,3 +21,7 @@ I like to make things that I will use. I often travel solo and wanted a way to t
 ## Disclaimer
 
 I shoddily put this app together for myself and are releasing to the public in case anyone else finds this useful. I am unlikely to update this project at all and will not offer any support.
+
+## Proof of ownership
+
+748e12e5e04ef80d486cfd0855045f0ee67839aacbb76fce6a826ad5
