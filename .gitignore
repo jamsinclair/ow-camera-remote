@@ -4,3 +4,10 @@ build
 
 # Ignore waf lock file
 .lock-waf*
+
+.DS_Store
+CLAUDE.md
+AGENTS.md
+
+docs
+scripts
