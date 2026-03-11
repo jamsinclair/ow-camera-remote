@@ -48,7 +48,6 @@ static char s_timer_vibration_subtitle[32];
 static void menu_select_callback(int index, void *ctx) {
   switch (index) {
     case MENU_ROW_CAMERA:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Switch Camera");
       {
         DictionaryIterator *out_iter;
         app_message_outbox_begin(&out_iter);
@@ -66,11 +65,9 @@ static void menu_select_callback(int index, void *ctx) {
       }
       break;
     case MENU_ROW_SETTINGS:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Dither Settings");
       dither_window_push();
       break;
     case MENU_ROW_TIMER:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Timer");
       timer_increment();
       // Update subtitle immediately to show new value
       uint16_t timer_val = timer_get_value();
@@ -84,7 +81,6 @@ static void menu_select_callback(int index, void *ctx) {
       layer_mark_dirty(simple_menu_layer_get_layer(s_menu_layer));
       break;
     case MENU_ROW_TIMER_VIBRATION:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Timer Vibration");
       timer_toggle_vibration();
       // Update subtitle immediately
       uint8_t vibration_enabled = timer_is_vibration_enabled();
@@ -94,7 +90,6 @@ static void menu_select_callback(int index, void *ctx) {
       break;
     #if defined(PBL_COLOR)
     case MENU_ROW_COLOR_MODE:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Color Mode");
       color_toggle_format();
       // Update subtitle immediately
       FrameFormat format = color_get_format();
@@ -105,7 +100,6 @@ static void menu_select_callback(int index, void *ctx) {
       break;
     #endif
     case MENU_ROW_PREVIEW:
-      APP_LOG(APP_LOG_LEVEL_INFO, "Selected: Preview Toggle");
       preview_toggle();
       // Update subtitle immediately
       uint8_t preview_enabled = preview_is_enabled();

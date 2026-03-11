@@ -51,9 +51,6 @@ bool parse_first_message_header(const uint8_t* data, size_t length,
   header_out->payload = data + 5;
   header_out->payload_size = length - 5;
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "message_header: timestamp=%lu, format=%u, multi_msg=%d, payload_size=%zu",
-          (unsigned long)timestamp, format, multi_message, header_out->payload_size);
-
   return true;
 }
 
@@ -92,9 +89,6 @@ bool parse_continuation_header(const uint8_t* data, size_t length,
   header_out->is_last_chunk = is_last_chunk;
   header_out->payload = data + 5;
   header_out->payload_size = length - 5;
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "continuation_header: timestamp=%lu, chunk=%u, last=%d, payload_size=%zu",
-          (unsigned long)timestamp, chunk_number, is_last_chunk, header_out->payload_size);
 
   return true;
 }

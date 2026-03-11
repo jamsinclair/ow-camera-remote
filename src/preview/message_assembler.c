@@ -70,7 +70,6 @@ void message_assembler_reset(void) {
   s_state.expected_chunk = 0;
   s_state.is_assembling = false;
   memset(s_state.palette, 0, sizeof(s_state.palette));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "message_assembler: reset");
 }
 
 void message_assembler_register_timeout_callback(AssemblerTimeoutCallback callback) {
@@ -108,24 +107,19 @@ static bool decompress_chunk_to_bitmap(
   // Calculate available space for decompression
   unsigned int available_space = bitmap_size - s_state.decompressed_offset;
 
-  // Decompress at current offset with timing
+  // Decompress at current offset
   unsigned int chunk_size = available_space;
-  uint32_t start_ms = time_ms(NULL, NULL);
   int result = tinflate_uncompress(
     bitmap_data + s_state.decompressed_offset,
     &chunk_size,
     compressed_data,
     compressed_size
   );
-  uint32_t elapsed_ms = time_ms(NULL, NULL) - start_ms;
 
   if (result != TINF_OK) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "message_assembler: decompression failed (result=%d)", result);
     return false;
   }
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "message_assembler: decompressed %u bytes at offset %zu in %lu ms (compressed: %zu bytes)",
-          chunk_size, s_state.decompressed_offset, (unsigned long)elapsed_ms, compressed_size);
 
   s_state.decompressed_offset += chunk_size;
   return true;
@@ -157,7 +151,6 @@ static bool handle_1bit_single_message(
   size_t total_pixels = width * height;
 
   // Unpack bits from packed payload and pack into bitmap rows
-  uint32_t start_ms = time_ms(NULL, NULL);
   uint8_t unpacked_pixels[8];
   size_t pixel_idx = 0;
 
@@ -182,10 +175,6 @@ static bool handle_1bit_single_message(
       }
     }
   }
-  uint32_t elapsed_ms = time_ms(NULL, NULL) - start_ms;
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "message_assembler: unpacked %zu bytes for 1-bit frame (%ux%u) in %lu ms",
-          first_header->payload_size, width, height, (unsigned long)elapsed_ms);
 
   callback(first_header->format, s_state.target_bitmap);
   return true;
@@ -272,7 +261,6 @@ static bool handle_multi_message_first(
       return false;
     }
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "message_assembler: first multi-msg chunk decompressed");
     return true;
   }
 
@@ -307,8 +295,6 @@ static bool handle_continuation_message(
 
   // If this is the last chunk, invoke callback and cleanup
   if (cont_header->is_last_chunk) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "message_assembler: last chunk received, invoking callback");
-
     // Cancel timeout timer since assembly completed
     if (s_state.timeout_timer) {
       app_timer_cancel(s_state.timeout_timer);

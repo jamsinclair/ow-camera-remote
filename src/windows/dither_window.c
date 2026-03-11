@@ -30,8 +30,6 @@ static void menu_select_callback(int index, void *context) {
   uint8_t selected_algorithm = DITHERING_OPTIONS[index].value;
   dither_save_to_storage(selected_algorithm);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Dithering changed to: %d", selected_algorithm);
-
   // Pop the settings window to return to menu
   window_stack_pop(true);
 }

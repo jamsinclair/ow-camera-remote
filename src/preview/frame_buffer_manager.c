@@ -16,9 +16,6 @@ bool frame_buffer_manager_init(void) {
 #ifdef PBL_COLOR
   // For color-capable watches, use the user's color format preference
   format = color_get_format();
-  APP_LOG(APP_LOG_LEVEL_INFO, "frame_buffer_manager: Using format=%d", format);
-#else
-  APP_LOG(APP_LOG_LEVEL_INFO, "frame_buffer_manager: Using 1-bit B&W (no PBL_COLOR)");
 #endif
 
   return frame_buffer_manager_init_with_format(format);
@@ -92,7 +89,6 @@ void frame_buffer_manager_deinit(void) {
     s_frame_buffer = NULL;
   }
   s_allocated_size = 0;
-  APP_LOG(APP_LOG_LEVEL_INFO, "frame_buffer_manager: Deinitialized");
 }
 
 GBitmap* frame_buffer_manager_get_buffer(void) {

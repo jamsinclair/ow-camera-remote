@@ -139,8 +139,6 @@ static void frame_assembly_complete_callback(MessageFormat format, GBitmap *bitm
 }
 
 static void preview_data_callback(uint8_t *data, size_t length) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "preview_data_callback called: data=%p, length=%zu", data, length);
-
   if (!s_frame_buffer) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "preview_data_callback: frame buffer is NULL");
     return;
@@ -180,7 +178,6 @@ static void preview_data_callback(uint8_t *data, size_t length) {
         uint8_t next_chunk = chunk_number + 1;
         FrameFormat format = frame_buffer_manager_get_format();
         send_request_next_chunk(next_chunk, format);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "preview_data_callback: chunk %u received (not last), requesting chunk %u", chunk_number, next_chunk);
       }
       // If is_last_chunk, the frame_assembly_complete_callback will request next frame
     } else {
@@ -191,7 +188,6 @@ static void preview_data_callback(uint8_t *data, size_t length) {
       if (multi_message) {
         // Multi-message frame - request chunk 1 immediately
         send_request_next_chunk(1, format_bits);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "preview_data_callback: first message of multi-message, requesting chunk 1");
       }
       // If single message, the frame_assembly_complete_callback will request next frame
     }
@@ -221,21 +217,18 @@ static void picture_taken_callback() {
 
   // Cancel countdown timer if running
   if (s_countdown_timer) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "picture_taken_callback: canceling countdown timer");
     app_timer_cancel(s_countdown_timer);
     s_countdown_timer = NULL;
   }
 
   // Cancel clear timer if running (picture arrived in time)
   if (s_countdown_clear_timer) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "picture_taken_callback: canceling clear timer");
     app_timer_cancel(s_countdown_clear_timer);
     s_countdown_clear_timer = NULL;
   }
 
   s_countdown_remaining = 0;
   if (s_countdown_layer) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "picture_taken_callback: clearing countdown display");
     text_layer_set_text(s_countdown_layer, "");
     layer_mark_dirty(text_layer_get_layer(s_countdown_layer));
   }
@@ -270,7 +263,6 @@ static void countdown_tick_handler(void *data) {
       s_countdown_timer = app_timer_register(1000, countdown_tick_handler, NULL);
     } else {
       // Countdown reached 0 - schedule clear timer in case picture_taken doesn't arrive
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "countdown_tick_handler: countdown reached 0, scheduling 2-second clear timer");
       s_countdown_clear_timer = app_timer_register(2000, countdown_clear_timeout_handler, NULL);
     }
   }
@@ -278,7 +270,6 @@ static void countdown_tick_handler(void *data) {
 
 static void countdown_clear_timeout_handler(void *data) {
   s_countdown_clear_timer = NULL;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "countdown_clear_timeout_handler: picture_taken didn't arrive in time, clearing countdown");
 
   // Stop expecting picture if it didn't arrive within timeout
   s_expecting_picture_taken = false;
@@ -321,18 +312,14 @@ static void start_countdown_overlay(uint16_t seconds) {
 
 static void capture_send_result_callback(bool success) {
   if (success) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "capture_send_result_callback: Companion app acknowledged capture command - starting countdown");
+    APP_LOG(APP_LOG_LEVEL_INFO, "capture_send_result_callback: Companion app acknowledged capture command");
     // Mark that we're expecting a picture from this capture
     s_expecting_picture_taken = true;
     // Start countdown overlay now that companion app acknowledged the capture
     extern uint16_t timer_get_value();
     uint16_t timer_seconds = timer_get_value();
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "capture_send_result_callback: timer_seconds=%u", timer_seconds);
     if (timer_seconds > 0) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "capture_send_result_callback: starting countdown overlay");
       start_countdown_overlay(timer_seconds);
-    } else {
-      APP_LOG(APP_LOG_LEVEL_INFO, "capture_send_result_callback: timer is 0, no countdown overlay needed");
     }
   }
   // Silently ignore timeout - no feedback if companion app doesn't acknowledge
@@ -346,7 +333,6 @@ static void start_camera_countdown() {
   // Use capture_send_result_callback to start countdown only if companion app acknowledges the capture command
   extern void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback);
   send_capture_with_ack(timer_seconds, capture_send_result_callback);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "start_camera_countdown: send_capture_with_ack returned");
 }
 
 /********************************* Canvas Layer ************************************/
@@ -354,13 +340,9 @@ static void start_camera_countdown() {
 static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(this_layer);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "canvas_update_proc: s_frame_buffer=%p, bounds=%ux%u",
-          s_frame_buffer, bounds.size.w, bounds.size.h);
-
   // Draw frame buffer only if preview is enabled and we've received data and haven't timed out
   if (preview_is_enabled() && s_frame_received && s_frame_buffer && s_timeout_count < TIMEOUT_THRESHOLD) {
     graphics_draw_bitmap_in_rect(ctx, s_frame_buffer, bounds);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "canvas_update_proc: drawing bitmap");
   } else if (!preview_is_enabled()) {
     // Preview is disabled - show "Preview Off" message
     graphics_context_set_fill_color(ctx, TEXT_COLOR);
@@ -477,8 +459,6 @@ static void preview_window_load(Window *window) {
     return;
   }
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Using preallocated frame buffer");
-
   // Initialize message assembler with frame buffer
   message_assembler_init(s_frame_buffer);
   message_assembler_register_timeout_callback(assembler_timeout_handler);
@@ -490,7 +470,6 @@ static void preview_window_load(Window *window) {
 
   // Only request frames if preview is enabled
   if (preview_is_enabled()) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting first frame");
     uint8_t format = (uint8_t)color_get_format();
     send_request_next_frame(model_name_to_enum(settings->model_name), format, settings->dithering_algorithm);
     s_frame_requested = true;

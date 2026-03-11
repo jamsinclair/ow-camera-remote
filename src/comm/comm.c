@@ -70,11 +70,9 @@ void send_int_app_message_with_callback(int key, int message, void *timeout_hand
 
   dict_write_int(iter, key, &message, sizeof(int), true);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Sending app message");
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code == APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "Inital send okay");
 
     response_wait_timer = app_timer_register(APP_MESSAGE_TIMEOUT, timeout_handler, NULL);
   } else {
@@ -100,14 +98,11 @@ void send_int_app_message_with_result_callback(int key, int message, SendResultC
     return;
   }
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "send_int_app_message_with_result_callback: writing key=%d, message=%d to outbox", key, message);
   dict_write_int(iter, key, &message, sizeof(int), true);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "send_int_app_message_with_result_callback: calling app_message_outbox_send");
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code == APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "send_int_app_message_with_result_callback: Initial send successful (APP_MSG_OK), waiting for outbox_sent confirmation");
     pending_send_result_callback = result_callback;
     response_wait_timer = app_timer_register(APP_MESSAGE_TIMEOUT, timeout_handler, NULL);
   } else {
@@ -115,12 +110,10 @@ void send_int_app_message_with_result_callback(int key, int message, SendResultC
 
     // Call result callback with failure
     if (result_callback) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "send_int_app_message_with_result_callback: invoking result_callback with false");
       result_callback(false);
     }
 
     if (timeout_handler) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "send_int_app_message_with_result_callback: invoking timeout_handler");
       AppTimerCallback handler = timeout_handler;
       handler(NULL);
     }
@@ -164,8 +157,6 @@ static void capture_retry_handler(void *data) {
     ((s_pending_capture_timer >> 16) & 0xFF)  // Byte 7: timer MSB
   };
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "capture_retry_handler: outbox ready on attempt %u, writing KEY_CAPTURE with timer=%d, timestamp=%lu to outbox",
-          s_capture_retry_count, s_pending_capture_timer, (unsigned long)timestamp);
   dict_write_data(iter, KEY_CAPTURE, capture_request, sizeof(capture_request));
 
   AppMessageResult send_result_code = app_message_outbox_send();
@@ -212,10 +203,8 @@ void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) 
     ((timer_seconds >> 16) & 0xFF)          // Byte 7: timer MSB
   };
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "send_capture_with_ack: writing KEY_CAPTURE with timer_seconds=%d, timestamp=%lu to outbox", timer_seconds, (unsigned long)timestamp);
   dict_write_data(iter, KEY_CAPTURE, capture_request, sizeof(capture_request));
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "send_capture_with_ack: calling app_message_outbox_send");
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code == APP_MSG_OK) {
@@ -279,14 +268,10 @@ void send_request_next_frame(uint8_t model_enum, uint8_t format, uint8_t ditheri
 
   dict_write_data(iter, KEY_REQUEST_NEXT_FRAME, frame_request, sizeof(frame_request));
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Requesting next frame with model=%d, format=%d, dithering=%d, timestamp=%lu",
-          model_enum, format, dithering_algorithm, (unsigned long)timestamp);
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code != APP_MSG_OK) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to request next frame: %s", translate_error(send_result_code));
-  } else {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Frame request sent successfully");
   }
 }
 
@@ -313,19 +298,14 @@ void send_request_next_chunk(uint8_t chunk_number, uint8_t format) {
 
   dict_write_data(iter, KEY_REQUEST_NEXT_CHUNK, chunk_request, sizeof(chunk_request));
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting chunk %u with format=%u, timestamp=%lu", chunk_number, format, (unsigned long)timestamp);
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code != APP_MSG_OK) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to request next chunk: %s", translate_error(send_result_code));
-  } else {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Chunk request sent successfully");
   }
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "inbox_received_callback: called");
-
   if (!iterator) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback: iterator is NULL");
     return;
@@ -338,12 +318,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     return;
   }
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Received message from Companion App");
-
   int tuple_count = 0;
   while(t != NULL) {
     tuple_count++;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox: processing tuple #%d, key=%d, type=%d, length=%zu", tuple_count, (int)t->key, t->type, t->length);
 
     switch(t->key) {
       case KEY_CAPTURE_ACK: {
@@ -398,11 +375,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         break;
       }
       case KEY_PREVIEW_DATA:
-        APP_LOG(APP_LOG_LEVEL_INFO, "KEY_PREVIEW_DATA received, type=%d, length=%zu", t->type, t->length);
         if (t->type == TUPLE_BYTE_ARRAY) {
           if (preview_data_callback) {
             preview_data_callback((uint8_t *)t->value, t->length);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "preview_data_callback invoked");
           } else {
             APP_LOG(APP_LOG_LEVEL_WARNING, "KEY_PREVIEW_DATA: no callback registered");
           }
@@ -417,8 +392,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
     t = dict_read_next(iterator);
   }
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox_received_callback: processed %d tuples", tuple_count);
 }
 
 static void inbox_dropped_handler(AppMessageResult reason, void *context) {
@@ -430,33 +403,25 @@ static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult
 
   // If there's a pending result callback, call it with false to signal failure
   if (pending_send_result_callback) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "outbox_failed_handler: invoking pending_send_result_callback with false due to outbox failure");
     pending_send_result_callback(false);
     pending_send_result_callback = NULL;
   }
 }
 
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "outbox_sent_handler: Message confirmed sent by OS");
-
   if (response_wait_timer) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "outbox_sent_handler: canceling response wait timer");
     app_timer_cancel(response_wait_timer);
     response_wait_timer = NULL;
   }
 
   // Call the pending result callback if one is set
   if (pending_send_result_callback) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "outbox_sent_handler: invoking pending_send_result_callback with true");
     pending_send_result_callback(true);
     pending_send_result_callback = NULL;
-  } else {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "outbox_sent_handler: no pending callback to invoke");
   }
 }
 
 void init_comm() {
-  APP_LOG(APP_LOG_LEVEL_INFO, "init_comm: registering callbacks");
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_inbox_dropped(inbox_dropped_handler);
   app_message_register_outbox_sent(outbox_sent_handler);
@@ -470,10 +435,8 @@ void init_comm() {
     ((PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT) / 8) + 256
   );
   uint32_t outbox_size = 52;
-  APP_LOG(APP_LOG_LEVEL_INFO, "init_comm: opening message app with inbox=%lu, outbox=%lu", inbox_size, outbox_size);
 
-  AppMessageResult result = app_message_open(inbox_size, outbox_size);
-  APP_LOG(APP_LOG_LEVEL_INFO, "init_comm: app_message_open result=%s", translate_error(result));
+  app_message_open(inbox_size, outbox_size);
 }
 
 void deinit_comm() {

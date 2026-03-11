@@ -37,9 +37,6 @@ bool frame_renderer_render(GBitmap *bitmap, uint8_t *frame_data, size_t frame_si
   uint16_t width = bounds.size.w;
   uint16_t height = bounds.size.h;
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "frame_renderer: bitmap size %ux%u, payload_size=%zu",
-          width, height, header.payload_size);
-
   GBitmapFormat format = gbitmap_get_format(bitmap);
   uint8_t *bitmap_data = gbitmap_get_data(bitmap);
   uint16_t bytes_per_row = gbitmap_get_bytes_per_row(bitmap);
@@ -60,13 +57,6 @@ bool frame_renderer_render(GBitmap *bitmap, uint8_t *frame_data, size_t frame_si
     APP_LOG(APP_LOG_LEVEL_ERROR, "frame_renderer: expected GBitmapFormat1Bit, got %d", format);
     return false;
   }
-
-  // Calculate expected packed size per row
-  uint16_t expected_bytes_per_row = (width + 7) / 8;
-  size_t expected_packed_size = expected_bytes_per_row * height;
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "frame_renderer: expected_packed_size=%zu, actual_payload_size=%zu, bytes_per_row=%u, expected_bytes_per_row=%u",
-          expected_packed_size, header.payload_size, bytes_per_row, expected_bytes_per_row);
 
   // Phone sends continuous bit stream, need to extract bits and repack with row stride
   // No temporary allocation - extract bits directly from payload
@@ -101,6 +91,5 @@ bool frame_renderer_render(GBitmap *bitmap, uint8_t *frame_data, size_t frame_si
     }
   }
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "frame_renderer: rendered frame %ux%u from %zu bytes", width, height, header.payload_size);
   return true;
 }
