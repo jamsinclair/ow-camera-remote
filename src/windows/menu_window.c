@@ -94,7 +94,7 @@ static void menu_select_callback(int index, void *ctx) {
       // Update subtitle immediately
       FrameFormat format = color_get_format();
       snprintf(s_color_mode_subtitle, sizeof(s_color_mode_subtitle),
-               "%s", format == FRAME_FORMAT_4BIT_COLOR ? "4-bit color" : "1-bit grayscale");
+               "%s", format == FRAME_FORMAT_4BIT_COLOR ? "Color (4bit)" : "B&W (1bit)");
       s_menu_items[MENU_ROW_COLOR_MODE].subtitle = s_color_mode_subtitle;
       layer_mark_dirty(simple_menu_layer_get_layer(s_menu_layer));
       break;
@@ -144,7 +144,7 @@ static void menu_window_appear(Window *window) {
   // Update color mode subtitle
   FrameFormat color_format = color_get_format();
   snprintf(s_color_mode_subtitle, sizeof(s_color_mode_subtitle),
-           "%s", color_format == FRAME_FORMAT_4BIT_COLOR ? "4-bit color" : "1-bit grayscale");
+           "%s", color_format == FRAME_FORMAT_4BIT_COLOR ? "Color (4bit)" : "B&W (1bit)");
   s_menu_items[MENU_ROW_COLOR_MODE].subtitle = s_color_mode_subtitle;
   #endif
 
@@ -207,7 +207,7 @@ void menu_window_push() {
   // Get color mode for subtitle
   FrameFormat color_format = color_get_format();
   snprintf(s_color_mode_subtitle, sizeof(s_color_mode_subtitle),
-           "%s", color_format == FRAME_FORMAT_4BIT_COLOR ? "4-bit color" : "1-bit grayscale");
+           "%s", color_format == FRAME_FORMAT_4BIT_COLOR ? "Color (4bit)" : "B&W (1bit)");
 
   s_menu_items[MENU_ROW_COLOR_MODE] = (SimpleMenuItem){
     .title = "Color Mode",
