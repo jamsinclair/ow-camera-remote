@@ -167,6 +167,10 @@ static void prv_send_capture_internal(int timer_seconds) {
   }
 }
 
+bool comm_capture_in_progress() {
+  return s_capture_in_progress || s_pending_capture.pending;
+}
+
 void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) {
   s_capture_in_progress = true;
   pending_capture_ack_callback = ack_callback;

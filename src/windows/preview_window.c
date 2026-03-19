@@ -93,6 +93,11 @@ static void assembler_timeout_handler(void) {
 static void request_retry_handler(void *data) {
   s_request_retry_timer = NULL;
   if (s_frame_requested && preview_is_enabled()) {
+    // If capture is in progress, don't queue more timers - picture_taken_callback will restart
+    if (comm_capture_in_progress()) {
+      return;
+    }
+
     s_timeout_count++;
     APP_LOG(APP_LOG_LEVEL_WARNING, "Frame request timeout, retrying... (count: %d)", s_timeout_count);
 
@@ -239,6 +244,10 @@ static void picture_taken_callback() {
 
   // Resume frame requests after capture completes (only if preview is enabled)
   if (preview_is_enabled()) {
+    if (s_request_retry_timer) {
+      app_timer_cancel(s_request_retry_timer);
+      s_request_retry_timer = NULL;
+    }
     AppSettings *settings = app_get_settings();
     uint8_t format_to_send = (uint8_t)color_get_format();
     send_request_next_frame(model_name_to_enum(settings->model_name), format_to_send, settings->dithering_algorithm);
