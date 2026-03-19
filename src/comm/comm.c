@@ -14,20 +14,23 @@ static SendResultCallback *pending_send_result_callback = NULL;
 static SendResultCallback *pending_capture_ack_callback = NULL;
 static AppTimer *capture_ack_timeout_timer = NULL;
 static bool s_capture_in_progress = false;
-static AppTimer *capture_retry_timer = NULL;
-static int s_pending_capture_timer = 0;
-static uint8_t s_capture_retry_count = 0;
-#define MAX_CAPTURE_RETRIES 3
 
-static void capture_retry_handler(void *data);
+// Pending capture state: when outbox is busy, we store the capture args here
+// and send them when the outbox clears
+typedef struct {
+  bool pending;
+  int timer_seconds;
+} PendingCapture;
+
+static PendingCapture s_pending_capture = {
+  .pending = false,
+  .timer_seconds = 0,
+};
 
 static void clear_capture_in_progress(void) {
   s_capture_in_progress = false;
-  s_capture_retry_count = 0;
-  if (capture_retry_timer) {
-    app_timer_cancel(capture_retry_timer);
-    capture_retry_timer = NULL;
-  }
+  s_pending_capture.pending = false;
+  s_pending_capture.timer_seconds = 0;
 }
 
 static void capture_ack_timeout_handler(void *data) {
@@ -120,73 +123,15 @@ void send_int_app_message_with_result_callback(int key, int message, SendResultC
   }
 }
 
-static void capture_retry_handler(void *data) {
-  capture_retry_timer = NULL;
-  s_capture_retry_count++;
-
-  if (s_capture_retry_count > MAX_CAPTURE_RETRIES) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "capture_retry_handler: Exceeded max retries (%u), giving up", MAX_CAPTURE_RETRIES);
-    if (pending_capture_ack_callback) {
-      pending_capture_ack_callback(false);
-      pending_capture_ack_callback = NULL;
-    }
-    clear_capture_in_progress();
-    return;
-  }
-
+static void prv_send_capture_internal(int timer_seconds) {
   DictionaryIterator *iter;
   AppMessageResult begin_result = app_message_outbox_begin(&iter);
 
   if (begin_result != APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "capture_retry_handler: app_message_outbox_begin still busy (attempt %u/%u), retrying in 50ms",
-            s_capture_retry_count, MAX_CAPTURE_RETRIES);
-    capture_retry_timer = app_timer_register(50, capture_retry_handler, NULL);
-    return;
-  }
-
-  // Capture format: [byte 0: reserved] [bytes 1-4: timestamp] [bytes 5-7: timer_seconds]
-  uint32_t timestamp = (uint32_t)time(NULL);
-  uint8_t capture_request[8] = {
-    0x00,                                   // Byte 0: reserved
-    (timestamp & 0xFF),                     // Byte 1: timestamp LSB
-    ((timestamp >> 8) & 0xFF),              // Byte 2: timestamp
-    ((timestamp >> 16) & 0xFF),             // Byte 3: timestamp
-    ((timestamp >> 24) & 0xFF),             // Byte 4: timestamp MSB
-    (s_pending_capture_timer & 0xFF),       // Byte 5: timer LSB
-    ((s_pending_capture_timer >> 8) & 0xFF),  // Byte 6: timer middle
-    ((s_pending_capture_timer >> 16) & 0xFF)  // Byte 7: timer MSB
-  };
-
-  dict_write_data(iter, KEY_CAPTURE, capture_request, sizeof(capture_request));
-
-  AppMessageResult send_result_code = app_message_outbox_send();
-
-  if (send_result_code == APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "capture_retry_handler: Message queued in outbox (attempt %u), waiting for KEY_CAPTURE_ACK from companion app", s_capture_retry_count);
-    // Keep s_capture_in_progress true until ACK is received
-    capture_ack_timeout_timer = app_timer_register(2000, capture_ack_timeout_handler, NULL);
-  } else {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "capture_retry_handler: Failed to queue message on attempt %u: %s", s_capture_retry_count, translate_error(send_result_code));
-    if (pending_capture_ack_callback) {
-      pending_capture_ack_callback(false);
-      pending_capture_ack_callback = NULL;
-    }
-    clear_capture_in_progress();
-  }
-}
-
-void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) {
-  s_capture_in_progress = true;
-  s_capture_retry_count = 0;
-  s_pending_capture_timer = timer_seconds;
-  pending_capture_ack_callback = ack_callback;
-
-  DictionaryIterator *iter;
-  AppMessageResult begin_result = app_message_outbox_begin(&iter);
-
-  if (begin_result != APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "send_capture_with_ack: app_message_outbox_begin failed (outbox busy), will retry: %s", translate_error(begin_result));
-    capture_retry_timer = app_timer_register(50, capture_retry_handler, NULL);
+    APP_LOG(APP_LOG_LEVEL_WARNING, "prv_send_capture_internal: app_message_outbox_begin failed (outbox busy): %s", translate_error(begin_result));
+    // Store as pending - will be retried when outbox clears
+    s_pending_capture.pending = true;
+    s_pending_capture.timer_seconds = timer_seconds;
     return;
   }
 
@@ -208,16 +153,25 @@ void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) 
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code == APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "send_capture_with_ack: Message queued in outbox, waiting for KEY_CAPTURE_ACK from companion app");
+    APP_LOG(APP_LOG_LEVEL_INFO, "prv_send_capture_internal: Message queued in outbox, waiting for KEY_CAPTURE_ACK from companion app");
     // Set timeout to wait for ACK - using 2 second timeout since companion app should respond immediately
     capture_ack_timeout_timer = app_timer_register(2000, capture_ack_timeout_handler, NULL);
+    s_pending_capture.pending = false;
   } else {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "send_capture_with_ack: Failed to queue message in outbox: %s", translate_error(send_result_code));
-    if (ack_callback) {
-      ack_callback(false);
+    APP_LOG(APP_LOG_LEVEL_WARNING, "prv_send_capture_internal: Failed to queue message in outbox: %s", translate_error(send_result_code));
+    if (pending_capture_ack_callback) {
+      pending_capture_ack_callback(false);
+      pending_capture_ack_callback = NULL;
     }
     clear_capture_in_progress();
   }
+}
+
+void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) {
+  s_capture_in_progress = true;
+  pending_capture_ack_callback = ack_callback;
+
+  prv_send_capture_internal(timer_seconds);
 }
 
 void register_picture_taken_callback(void *callback) {
@@ -239,9 +193,14 @@ uint8_t model_name_to_enum(const char *model_name) {
 }
 
 void send_request_next_frame(uint8_t model_enum, uint8_t format, uint8_t dithering_algorithm) {
-  // Skip frame requests while capture is in progress
+  // Skip frame requests while capture is in progress or pending
   if (s_capture_in_progress) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "send_request_next_frame: skipping frame request (capture in progress)");
+    return;
+  }
+
+  if (s_pending_capture.pending) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "send_request_next_frame: skipping frame request (pending capture waiting for outbox)");
     return;
   }
 
@@ -271,7 +230,7 @@ void send_request_next_frame(uint8_t model_enum, uint8_t format, uint8_t ditheri
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code != APP_MSG_OK) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to request next frame: %s", translate_error(send_result_code));
+    APP_LOG(APP_LOG_LEVEL_ERROR, "send_request_next_frame: outbox_send failed: %s", translate_error(send_result_code));
   }
 }
 
@@ -406,6 +365,12 @@ static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult
     pending_send_result_callback(false);
     pending_send_result_callback = NULL;
   }
+
+  // Check if there's a pending capture - if so, try to send it now
+  if (s_pending_capture.pending) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "outbox_failed_handler: attempting pending capture after outbox failure");
+    prv_send_capture_internal(s_pending_capture.timer_seconds);
+  }
 }
 
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
@@ -418,6 +383,12 @@ static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
   if (pending_send_result_callback) {
     pending_send_result_callback(true);
     pending_send_result_callback = NULL;
+  }
+
+  // Check if there's a pending capture waiting for the outbox to clear
+  if (s_pending_capture.pending) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "outbox_sent_handler: outbox cleared, attempting pending capture");
+    prv_send_capture_internal(s_pending_capture.timer_seconds);
   }
 }
 

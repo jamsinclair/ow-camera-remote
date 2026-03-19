@@ -148,9 +148,10 @@ static void preview_data_callback(uint8_t *data, size_t length) {
   if (length >= 5) {
     uint32_t msg_timestamp = data[1] | ((uint32_t)data[2] << 8) | ((uint32_t)data[3] << 16) | ((uint32_t)data[4] << 24);
     uint32_t now = (uint32_t)time(NULL);
+    uint32_t age = (now >= msg_timestamp) ? (now - msg_timestamp) : 0;
 
-    if (now >= msg_timestamp && (now - msg_timestamp) > STALE_MSG_THRESHOLD_S) {
-      APP_LOG(APP_LOG_LEVEL_WARNING, "Dropping stale frame (age=%us)", (unsigned int)(now - msg_timestamp));
+    if (now >= msg_timestamp && age > STALE_MSG_THRESHOLD_S) {
+      APP_LOG(APP_LOG_LEVEL_WARNING, "Dropping stale frame (age=%us)", (unsigned int)age);
       return;
     }
   }
@@ -161,6 +162,9 @@ static void preview_data_callback(uint8_t *data, size_t length) {
     s_request_retry_timer = NULL;
   }
   s_frame_requested = false;
+  if (!s_frame_received) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "preview_data_callback: first frame accepted at t=%lu", (unsigned long)time(NULL));
+  }
   s_frame_received = true;
 
   // REQUEST EARLY: Parse header quickly and request next item before processing
@@ -471,6 +475,7 @@ static void preview_window_load(Window *window) {
   // Only request frames if preview is enabled
   if (preview_is_enabled()) {
     uint8_t format = (uint8_t)color_get_format();
+    APP_LOG(APP_LOG_LEVEL_INFO, "preview_window_load: sending initial frame request at t=%lu", (unsigned long)time(NULL));
     send_request_next_frame(model_name_to_enum(settings->model_name), format, settings->dithering_algorithm);
     s_frame_requested = true;
     s_request_retry_timer = app_timer_register(REQUEST_TIMEOUT_MS, request_retry_handler, NULL);
