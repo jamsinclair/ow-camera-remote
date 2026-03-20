@@ -251,9 +251,11 @@ static void picture_taken_callback() {
 
   s_countdown_remaining = 0;
   if (s_countdown_layer) {
+    text_layer_set_text_color(s_countdown_layer, TEXT_COLOR);
     text_layer_set_text(s_countdown_layer, "");
     layer_mark_dirty(text_layer_get_layer(s_countdown_layer));
   }
+  layer_mark_dirty(s_canvas_layer);
 
   // Resume frame requests after capture completes (only if preview is enabled)
   if (preview_is_enabled()) {
@@ -302,9 +304,11 @@ static void countdown_clear_timeout_handler(void *data) {
 
   s_countdown_remaining = 0;
   if (s_countdown_layer) {
+    text_layer_set_text_color(s_countdown_layer, TEXT_COLOR);
     text_layer_set_text(s_countdown_layer, "");
     layer_mark_dirty(text_layer_get_layer(s_countdown_layer));
   }
+  layer_mark_dirty(s_canvas_layer);
 }
 
 static void start_countdown_overlay(uint16_t seconds) {
@@ -325,8 +329,11 @@ static void start_countdown_overlay(uint16_t seconds) {
 
   s_countdown_remaining = seconds;
   snprintf(s_countdown_text, sizeof(s_countdown_text), "%u", s_countdown_remaining);
+  // When preview is off, background is TEXT_COLOR so use black for visibility
+  text_layer_set_text_color(s_countdown_layer, preview_is_enabled() ? TEXT_COLOR : GColorBlack);
   text_layer_set_text(s_countdown_layer, s_countdown_text);
   layer_mark_dirty(text_layer_get_layer(s_countdown_layer));
+  layer_mark_dirty(s_canvas_layer);
 
   // Vibrate immediately if vibration enabled
   if (timer_is_vibration_enabled()) {
@@ -370,26 +377,30 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
   if (preview_is_enabled() && s_frame_received && s_frame_buffer && s_timeout_count < TIMEOUT_THRESHOLD) {
     graphics_draw_bitmap_in_rect(ctx, s_frame_buffer, bounds);
   } else if (!preview_is_enabled()) {
-    // Preview is disabled - show "Preview Off" message
+    // Preview is disabled - fill background
     graphics_context_set_fill_color(ctx, TEXT_COLOR);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
-    graphics_context_set_text_color(ctx, GColorBlack);
 
-    GRect text_bounds;
-    #ifdef PBL_ROUND
-    text_bounds.origin.x = 15;
-    text_bounds.size.w = bounds.size.w - 30;
-    text_bounds.size.h = 70;
-    text_bounds.origin.y = (bounds.size.h / 2) - 35;
-    #else
-    text_bounds.origin.x = 10;
-    text_bounds.size.w = bounds.size.w - 20;
-    text_bounds.size.h = 80;
-    text_bounds.origin.y = (bounds.size.h / 2) - 40;
-    #endif
+    // Only show "Preview Off" text if no countdown is in progress
+    if (s_countdown_remaining == 0) {
+      graphics_context_set_text_color(ctx, GColorBlack);
 
-    graphics_draw_text(ctx, "Preview\n\nOff", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                       text_bounds, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+      GRect text_bounds;
+      #ifdef PBL_ROUND
+      text_bounds.origin.x = 15;
+      text_bounds.size.w = bounds.size.w - 30;
+      text_bounds.size.h = 70;
+      text_bounds.origin.y = (bounds.size.h / 2) - 35;
+      #else
+      text_bounds.origin.x = 10;
+      text_bounds.size.w = bounds.size.w - 20;
+      text_bounds.size.h = 80;
+      text_bounds.origin.y = (bounds.size.h / 2) - 40;
+      #endif
+
+      graphics_draw_text(ctx, "Preview\n\nOff", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+                         text_bounds, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    }
   } else {
     // Draw light background (waiting for frames)
     graphics_context_set_fill_color(ctx, TEXT_COLOR);
