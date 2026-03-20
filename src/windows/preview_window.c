@@ -21,6 +21,9 @@ static GBitmap *s_camera_bitmap;
 static GBitmap *s_gear_bitmap;
 static GBitmap *s_timer_bitmaps[5];  // Bitmaps for 0, 3, 5, 10, 15 seconds
 
+// Window visibility state
+static bool s_preview_visible = false;
+
 // Frame request state
 static bool s_frame_requested = false;
 static AppTimer *s_request_retry_timer = NULL;
@@ -78,8 +81,8 @@ static void request_retry_handler(void *data);
 
 static void assembler_timeout_handler(void) {
   APP_LOG(APP_LOG_LEVEL_INFO, "assembler_timeout_handler: multi-message frame assembly timed out");
-  // Don't request frames if preview is disabled
-  if (!preview_is_enabled()) {
+  // Don't request frames if preview is disabled or window not visible
+  if (!preview_is_enabled() || !s_preview_visible) {
     return;
   }
   // Request next frame when assembly times out
@@ -130,8 +133,8 @@ static void frame_assembly_complete_callback(MessageFormat format, GBitmap *bitm
   // Trigger canvas redraw
   layer_mark_dirty(s_canvas_layer);
 
-  // Only request next frame if preview is enabled
-  if (!preview_is_enabled()) {
+  // Only request next frame if preview is enabled and window is visible
+  if (!preview_is_enabled() || !s_preview_visible) {
     return;
   }
 
@@ -144,6 +147,10 @@ static void frame_assembly_complete_callback(MessageFormat format, GBitmap *bitm
 }
 
 static void preview_data_callback(uint8_t *data, size_t length) {
+  if (!s_preview_visible) {
+    return;
+  }
+
   if (!s_frame_buffer) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "preview_data_callback: frame buffer is NULL");
     return;
@@ -513,6 +520,7 @@ static void preview_window_load(Window *window) {
 }
 
 static void preview_window_appear(Window *window) {
+  s_preview_visible = true;
   update_timer_icon();
 
   // Reinitialize frame buffer in case color mode changed while menu was open
@@ -540,6 +548,7 @@ static void preview_window_appear(Window *window) {
 }
 
 static void preview_window_disappear(Window *window) {
+  s_preview_visible = false;
   // Stop requesting frames when window is not visible (e.g., menu is open)
   if (s_request_retry_timer) {
     app_timer_cancel(s_request_retry_timer);
@@ -563,6 +572,7 @@ static void preview_window_unload(Window *window) {
   }
   s_frame_requested = false;
   s_frame_received = false;
+  s_preview_visible = false;
   s_countdown_remaining = 0;
   s_expecting_picture_taken = false;
   message_assembler_deinit();
