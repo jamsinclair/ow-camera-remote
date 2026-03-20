@@ -101,6 +101,12 @@ static void request_retry_handler(void *data) {
       return;
     }
 
+    // If outbox still has a pending message, don't try to send another - just wait longer
+    if (comm_outbox_pending()) {
+      s_request_retry_timer = app_timer_register(REQUEST_TIMEOUT_MS, request_retry_handler, NULL);
+      return;
+    }
+
     s_timeout_count++;
     APP_LOG(APP_LOG_LEVEL_WARNING, "Frame request timeout, retrying... (count: %d)", s_timeout_count);
 

@@ -21,6 +21,7 @@ void send_int_app_message_with_callback(int key, int message, void *timeout_hand
 void send_int_app_message_with_result_callback(int key, int message, SendResultCallback *result_callback, void *timeout_handler);
 void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback);
 bool comm_capture_in_progress();
+bool comm_outbox_pending();
 void register_picture_taken_callback();
 void send_request_next_frame(uint8_t model_enum, uint8_t format, uint8_t dithering_algorithm);
 void send_request_next_chunk(uint8_t chunk_number, uint8_t format);

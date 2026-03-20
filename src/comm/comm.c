@@ -14,6 +14,7 @@ static SendResultCallback *pending_send_result_callback = NULL;
 static SendResultCallback *pending_capture_ack_callback = NULL;
 static AppTimer *capture_ack_timeout_timer = NULL;
 static bool s_capture_in_progress = false;
+static bool s_outbox_pending = false;
 
 // Pending capture state: when outbox is busy, we store the capture args here
 // and send them when the outbox clears
@@ -153,6 +154,7 @@ static void prv_send_capture_internal(int timer_seconds) {
   AppMessageResult send_result_code = app_message_outbox_send();
 
   if (send_result_code == APP_MSG_OK) {
+    s_outbox_pending = true;
     APP_LOG(APP_LOG_LEVEL_INFO, "prv_send_capture_internal: Message queued in outbox, waiting for KEY_CAPTURE_ACK from companion app");
     // Set timeout to wait for ACK - using 2 second timeout since companion app should respond immediately
     capture_ack_timeout_timer = app_timer_register(2000, capture_ack_timeout_handler, NULL);
@@ -169,6 +171,10 @@ static void prv_send_capture_internal(int timer_seconds) {
 
 bool comm_capture_in_progress() {
   return s_capture_in_progress || s_pending_capture.pending;
+}
+
+bool comm_outbox_pending() {
+  return s_outbox_pending;
 }
 
 void send_capture_with_ack(int timer_seconds, SendResultCallback *ack_callback) {
@@ -233,7 +239,9 @@ void send_request_next_frame(uint8_t model_enum, uint8_t format, uint8_t ditheri
 
   AppMessageResult send_result_code = app_message_outbox_send();
 
-  if (send_result_code != APP_MSG_OK) {
+  if (send_result_code == APP_MSG_OK) {
+    s_outbox_pending = true;
+  } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "send_request_next_frame: outbox_send failed: %s", translate_error(send_result_code));
   }
 }
@@ -263,7 +271,9 @@ void send_request_next_chunk(uint8_t chunk_number, uint8_t format) {
 
   AppMessageResult send_result_code = app_message_outbox_send();
 
-  if (send_result_code != APP_MSG_OK) {
+  if (send_result_code == APP_MSG_OK) {
+    s_outbox_pending = true;
+  } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to request next chunk: %s", translate_error(send_result_code));
   }
 }
@@ -362,6 +372,7 @@ static void inbox_dropped_handler(AppMessageResult reason, void *context) {
 }
 
 static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  s_outbox_pending = false;
   APP_LOG(APP_LOG_LEVEL_ERROR, "outbox_failed_handler: Outbox send failed with error: %s (code: %d)", translate_error(reason), reason);
 
   // If there's a pending result callback, call it with false to signal failure
@@ -378,6 +389,7 @@ static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult
 }
 
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context) {
+  s_outbox_pending = false;
   if (response_wait_timer) {
     app_timer_cancel(response_wait_timer);
     response_wait_timer = NULL;
