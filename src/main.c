@@ -21,6 +21,7 @@ AppSettings* app_get_settings() {
 static void detect_watch_model() {
   g_app_settings.screen_width = PBL_DISPLAY_WIDTH;
   g_app_settings.screen_height = PBL_DISPLAY_HEIGHT;
+  g_app_settings.action_bar_width = PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 28);
 
 #ifdef PBL_PLATFORM_APLITE
   strcpy(g_app_settings.model_name, "aplite");

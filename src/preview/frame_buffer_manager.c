@@ -39,7 +39,7 @@ bool frame_buffer_manager_init_with_format(FrameFormat format) {
 
   // Calculate frame size: screen dimensions minus action bar width (side action bar)
   uint16_t frame_height = settings->screen_height;
-  uint16_t frame_width = settings->screen_width - TIMER_OVERLAY_HEIGHT;
+  uint16_t frame_width = settings->screen_width - settings->action_bar_width;
 
   if (frame_height <= 0 || frame_width <= 0) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "frame_buffer_manager: Invalid dimensions %ux%u",
