@@ -6,6 +6,7 @@ typedef struct {
   char model_name[16];
   uint16_t screen_width;
   uint16_t screen_height;
+  uint16_t action_bar_width;
   uint8_t dithering_algorithm;
   uint16_t timer_seconds;
   uint8_t color_format;

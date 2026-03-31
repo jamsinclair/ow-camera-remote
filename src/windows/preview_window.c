@@ -470,7 +470,7 @@ static void preview_window_load(Window *window) {
 
   // Create canvas layer for frames (accounting for action bar width on rect displays)
   GRect canvas_bounds = GRect(0, 0,
-                               bounds.size.w - PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0),
+                               bounds.size.w - app_get_settings()->action_bar_width,
                                bounds.size.h);
   s_canvas_layer = layer_create(canvas_bounds);
   layer_set_update_proc(s_canvas_layer, canvas_update_proc);

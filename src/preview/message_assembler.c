@@ -323,38 +323,42 @@ bool message_assembler_process(
     return false;
   }
 
-  // Try to parse as first message
-  FirstMessageHeader first_header;
-  if (parse_first_message_header(msg_data, msg_length, &first_header)) {
-    // Validate format matches allocated buffer
-    FrameFormat expected_format = frame_buffer_manager_get_format();
-    if ((expected_format == FRAME_FORMAT_1BIT_BW && first_header.format != MESSAGE_FORMAT_1BIT_BW) ||
-        (expected_format == FRAME_FORMAT_4BIT_COLOR && first_header.format != MESSAGE_FORMAT_4BIT_COLOR)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "message_assembler: format mismatch (expected=%d, received=%d)",
-              expected_format, first_header.format);
+  uint8_t header_byte = msg_data[0];
+
+  if (header_byte & 0x01) {
+    // Continuation message (bit 0 = 1)
+    ContinuationHeader cont_header;
+    if (!parse_continuation_header(msg_data, msg_length, &cont_header)) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "message_assembler: failed to parse continuation header");
       return false;
     }
-
-    if (first_header.multi_message) {
-      // Multi-message sequence - start accumulation
-      return handle_multi_message_first(&first_header);
-    } else {
-      // Single message - process immediately
-      if (first_header.format == MESSAGE_FORMAT_1BIT_BW) {
-        return handle_1bit_single_message(&first_header, callback);
-      } else if (first_header.format == MESSAGE_FORMAT_4BIT_COLOR) {
-        return handle_4bit_single_message(&first_header, callback);
-      }
-    }
-    return true;
-  }
-
-  // Try to parse as continuation message
-  ContinuationHeader cont_header;
-  if (parse_continuation_header(msg_data, msg_length, &cont_header)) {
     return handle_continuation_message(&cont_header, callback);
   }
 
-  APP_LOG(APP_LOG_LEVEL_ERROR, "message_assembler: unable to parse as first or continuation");
-  return false;
+  // First message (bit 0 = 0)
+  FirstMessageHeader first_header;
+  if (!parse_first_message_header(msg_data, msg_length, &first_header)) {
+    return false;
+  }
+
+  // Validate format matches allocated buffer
+  FrameFormat expected_format = frame_buffer_manager_get_format();
+  if ((expected_format == FRAME_FORMAT_1BIT_BW && first_header.format != MESSAGE_FORMAT_1BIT_BW) ||
+      (expected_format == FRAME_FORMAT_4BIT_COLOR && first_header.format != MESSAGE_FORMAT_4BIT_COLOR)) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "message_assembler: format mismatch (expected=%d, received=%d)",
+            expected_format, first_header.format);
+    return false;
+  }
+
+  if (first_header.multi_message) {
+    return handle_multi_message_first(&first_header);
+  }
+
+  if (first_header.format == MESSAGE_FORMAT_1BIT_BW) {
+    return handle_1bit_single_message(&first_header, callback);
+  } else if (first_header.format == MESSAGE_FORMAT_4BIT_COLOR) {
+    return handle_4bit_single_message(&first_header, callback);
+  }
+
+  return true;
 }
