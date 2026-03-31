@@ -1,9 +1,6 @@
 #pragma once
 #include <pebble.h>
 
-// Timer overlay height used across the app
-#define TIMER_OVERLAY_HEIGHT 30
-
 // Frame format enum (extensible for future color support)
 typedef enum {
   FRAME_FORMAT_1BIT_BW = 0,    // 1-bit black & white
