@@ -8,6 +8,10 @@ Set a timer, strike a pose, and have your pic taken.
 
 Requires the Android companion app, [OW Camera 2 for Pebble](https://play.google.com/store/apps/details?id=com.github.jamsinclair.owcamera2).
 
+Supported Pebble Apps:
+- [Pebble / Core app](https://github.com/coredevices/mobileapp) (from `1.0.7.7`)
+- [microPebble](https://github.com/matejdro/microPebble) (from `1.0.0-alpha35`)
+
 ## Controls
 
 - **Up**: Toggle timer duration (max 15 seconds)
