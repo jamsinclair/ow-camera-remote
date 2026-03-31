@@ -29,8 +29,9 @@ Built with the Pebble SDK. See [CONTRIBUTING.md](CONTRIBUTING.md) for build and 
 
 ## History
 
-2016: Hastily hacked together over two weekends... 6 months apart. I travel solo and wanted a way to take pictures of myself in different locations away from my phone.
-2026: With the release of Pebble Duo 2, I originally fixed the, much simpler, original app to work with the new hardware, but a friend suggested adding a live preview. So after a few months of development, here we are.
+**2016:** Hastily hacked together over two weekends... 6 months apart. I travel solo and wanted a way to take pictures of myself in different locations away from my phone.
+
+**2026:** With the release of Pebble Duo 2, I originally fixed the, much simpler, original app to work with the new hardware, but a friend suggested adding a live preview. So after a few months of development, here we are.
 
 ## Proof of ownership
 
