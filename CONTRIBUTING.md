@@ -66,10 +66,9 @@ pebble logs --cloudpebble
 ## Submitting Changes
 
 1. **Create a branch** from `master` for your work
-2. **Keep commits clean** - one logical change per commit
-3. **Follow code standards** - use the checklist in CODE_REVIEW_GUIDE.md
-4. **Submit a PR** with a clear description of what changed and why
-5. **Expect review** - we'll check alignment with project scope and standards
+1. **Keep commits clean** - one logical change per commit
+1. **Submit a PR** with a clear description of what changed and why
+1. **Expect review** - we'll check alignment with project scope and standards
 
 ## Questions?
 
