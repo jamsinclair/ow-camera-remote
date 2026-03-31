@@ -1,0 +1,89 @@
+{
+  "name": "OW Camera Remote 2",
+  "author": "jamsinclair",
+  "version": "2.0.1",
+  "private": true,
+  "keywords": [
+    "pebble-app"
+  ],
+  "dependencies": {},
+  "pebble": {
+    "sdkVersion": "3",
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "flint",
+      "emery"
+    ],
+    "enableMultiJS": false,
+    "capabilities": [],
+    "projectType": "native",
+    "displayName": "OW Camera Remote 2",
+    "uuid": "c187457d-3067-4062-8b1a-f8fde467b545",
+    "watchapp": {
+      "watchface": false,
+      "hiddenApp": false,
+      "onlyShownOnCommunication": false
+    },
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "CAMERA",
+          "file": "images/camera.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "GEAR",
+          "file": "images/gear.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TIMER_0",
+          "file": "images/timer_0.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TIMER_3",
+          "file": "images/timer_3.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TIMER_5",
+          "file": "images/timer_5.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TIMER_10",
+          "file": "images/timer_10.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TIMER_15",
+          "file": "images/timer_15.png"
+        }
+      ]
+    },
+    "messageKeys": {
+      "capture": 1,
+      "picture_taken": 2,
+      "preview_data": 3,
+      "request_next_frame": 4,
+      "capture_ack": 5,
+      "toggle_camera": 6,
+      "request_next_chunk": 7
+    },
+    "companionApp": {
+      "android": {
+        "url": "https://jamie.tokyo",
+        "apps": [
+          {
+            "package": "com.github.jamsinclair.owcamera2"
+          }
+        ]
+      }
+    }
+  }
+}

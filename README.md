@@ -1,26 +1,36 @@
 # OW Camera Remote
 
-A very simple camera timer remote app for Pebble Watches.
+A Pebble Watch app that lets you preview your phone's camera and remotely take pictures with a timer.
 
-Set the countdown timer and pose for your great photo away from your phone.
+Set a timer, strike a pose, and have your pic taken.
 
-Check it out on [Pebble Apps](https://apps.getpebble.com/applications/57542b7f70c28c587d000004)!
+[Repebble Appstore Listing](https://apps.rePebble.com/57542b7f70c28c587d000004)
 
-Relies on a companion app, [OW Camera for Pebble](https://play.google.com/store/apps/details?id=com.github.jamsinclair.owcamera), for photo taking from Android phone. The companion app is a modified clone of the great [Open Camera](http://opencamera.sourceforge.net) app.
+Requires the Android companion app, [OW Camera 2 for Pebble](https://play.google.com/store/apps/details?id=com.github.jamsinclair.owcamera2).
 
-| Time Round  | Time & Time Steel | Classic & Steel |
-| --- | --- | --- |
-| ![Pebcam Timer in action on Pebble Time Round](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/chalk.gif) |  ![Pebcam Timer in action on Pebble Time and Time Steel](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/basalt.gif) |  ![Pebcam Timer in action on Pebble Classic & Steel](https://raw.githubusercontent.com/jamsinclair/ow-camera-remote/master/submission-files/aplite.gif) |
+## Controls
+
+- **Up**: Toggle timer duration (max 15 seconds)
+- **Middle**: Start the timer capture
+- **Down**: Open the settings window
+
+## Settings
+
+- **Switch Camera**: Toggle between front and rear phone cameras
+- **Preview**: Toggle whether to show a live preview from your camera
+- **Timer**: Toggle timer duration (max 15 seconds)
+- **Timer Vibration**: Toggle whether to vibrate on each countdown second
+- **Dither**: Choose the dither mode for the preview image (defaults to Floyd-Steinberg)
+- **Color Mode**: Choose between color and black-and-white preview (color devices only). Black-and-white previews have a faster frame rate.
+
+## Building
+
+Built with the Pebble SDK. See [CONTRIBUTING.md](CONTRIBUTING.md) for build and development details.
 
 ## History
 
-Hastily hacked app together over two weekends.... 6 months apart.
-
-I like to make things that I will use. I often travel solo and wanted a way to take pictures of myself in different locations away from my phone using a remote or timer.
-
-## Disclaimer
-
-I shoddily put this app together for myself and are releasing to the public in case anyone else finds this useful. I am unlikely to update this project at all and will not offer any support.
+2016: Hastily hacked together over two weekends... 6 months apart. I travel solo and wanted a way to take pictures of myself in different locations away from my phone.
+2026: With the release of Pebble Duo 2, I originally fixed the, much simpler, original app to work with the new hardware, but a friend suggested adding a live preview. So after a few months of development, here we are.
 
 ## Proof of ownership
 
