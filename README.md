@@ -4,19 +4,21 @@ A Pebble Watch app that lets you preview your phone's camera and remotely take p
 
 Set a timer, strike a pose, and have your pic taken.
 
-[Repebble Appstore Listing](https://apps.rePebble.com/57542b7f70c28c587d000004)
+Pebble Appstore Listings
+- [RePebble](https://apps.repebble.com/57542b7f70c28c587d000004)
+- [Rebble](https://apps.rebble.io/en_US/application/57542b7f70c28c587d000004)
 
 Requires the Android companion app, [OW Camera 2 for Pebble](https://github.com/jamsinclair/ow-camera-android).
 
 Supported Pebble Apps:
-- [Pebble / Core app](https://github.com/coredevices/mobileapp) (from `1.0.7.7`)
+- [Pebble / Core Devices app](https://github.com/coredevices/mobileapp) (from `1.0.7.7`)
 - [microPebble](https://github.com/matejdro/microPebble) (from `1.0.0-alpha35`)
 
 ## Companion App
 
 [<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/jamsinclair/ow-camera-android/releases/latest)
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Get it on Google Playstore" height="80">](https://play.google.com/store/apps/details?id=com.github.jamsinclair.owcamera2)
-[<img src="./docs/badge_obtainium.png" alt="Get it on Obtainium" height="80">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/jamsinclair/ow-camera-android)
+[<img src="https://github.com/jamsinclair/ow-camera-android/blob/d275a38e390f885d422d0f50cd4333c4e85218df/docs/badge_obtainium.png" alt="Get it on Obtainium" height="80">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/jamsinclair/ow-camera-android)
 
 Source code for the companion app is available at [github.com/jamsinclair/ow-camera-android](https://github.com/jamsinclair/ow-camera-android).
 
